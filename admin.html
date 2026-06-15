@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperMC Server - Admin</title>
+    <meta name="description" content="PaperMC Server Admin Panel">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="updates.html" class="nav-link">Updates</a>
+        <a href="admin.html" class="nav-link active">Admin</a>
+    </nav>
+
+    <main class="container">
+        <!-- Login Section -->
+        <section id="login-section" class="admin-panel">
+            <h2>Admin Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="admin-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="admin-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                <p id="login-error" class="error-text"></p>
+            </form>
+        </section>
+
+        <!-- Dashboard Section (Hidden by default) -->
+        <section id="dashboard-section" class="admin-panel" style="display: none; position: relative;">
+            <button id="logout-btn" class="btn btn-secondary btn-sm" style="position: absolute; top: 1.5rem; right: 1.5rem;">Logout</button>
+            <h2 style="margin-bottom: 2rem;">Website Configuration</h2>
+            
+            <div id="config-form">
+                <div class="form-section">
+                    <h3>Server & Links</h3>
+                    <div class="form-group">
+                        <label>Minecraft Server IP</label>
+                        <input type="text" id="config-ip" placeholder="play.papersmp.net">
+                    </div>
+                    <div class="form-group">
+                        <label>Discord Invite Link</label>
+                        <input type="text" id="config-discord" placeholder="https://discord.gg/...">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Notifications</h3>
+                    <div class="form-group toggle-row">
+                        <label for="config-updates-badge">New Updates badge (gold glow on Updates tab)</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="config-updates-badge">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                    <h3>Staff Members</h3>
+                    <div id="staff-list">
+                        <!-- Dynamic staff inputs -->
+                    </div>
+                    <button type="button" id="add-staff-btn" class="btn btn-secondary">+ Add Staff Member</button>
+                </div>
+
+                <p id="save-status" class="success-text"></p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        Ontworpen door <a href="https://accounts.wonderdev.nl" target="_blank">wonderlight studios</a>
+    </footer>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
