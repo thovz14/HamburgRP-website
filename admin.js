@@ -241,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Developer Badge</option>
                     <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
                     <option value="builder-badge" ${rankClass === 'builder-badge' ? 'selected' : ''}>Builder Badge</option>
+                    <option value="media-badge" ${rankClass === 'media-badge' ? 'selected' : ''}>Media Badge</option>
                 </select>
                 <button type="button" class="btn btn-secondary remove-badge-btn" style="padding: 5px 10px;"><i class="fa-solid fa-xmark"></i></button>
             `;

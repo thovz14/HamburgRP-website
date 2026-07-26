@@ -358,15 +358,20 @@ body {
 }
 
 .developer-badge {
-    background: rgb(146, 3, 156);
-    color: var(--accent-red);
-    border: 1px solid rgb(119, 3, 128);
+    background: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+    border: 1px solid rgba(155, 89, 182, 0.3);
 }
 
 .builder-badge {
     background: rgba(134, 7, 252, 0.15);
     color: rgb(134, 7, 252);
     border: 1px solid rgba(134, 7, 252, 0.3);
+}
+.media-badge {
+    background: rgba(232, 67, 147, 0.15);
+    color: #e84393;
+    border: 1px solid rgba(232, 67, 147, 0.3);
 }
 
 .admin-badge {
