@@ -102,11 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
             deaths: '0'
         }));
 
-        const updateInputs = document.querySelectorAll('.update-input-row');
+        const updateInputs = document.querySelectorAll('.update-input-row:not(.new-update-form)');
         const updates = Array.from(updateInputs).map(row => ({
             date: row.querySelector('.update-date').value,
             title: row.querySelector('.update-title').value,
             description: row.querySelector('.update-description').value,
+            hasButton: row.querySelector('.update-btn-toggle').checked,
             buttonText: row.querySelector('.update-btn-text').value,
             buttonLink: row.querySelector('.update-btn-link').value,
             buttonClass: row.querySelector('.update-btn-class').value
@@ -187,19 +188,39 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleAutoSave();
     });
 
+    let draggedUpdate = null;
+
     // Update creation
-    function createUpdateInput(date = '', title = '', description = '', buttonText = '', buttonLink = 'index.html', buttonClass = 'btn-primary') {
+    function createUpdateInput(date = '', title = '', description = '', hasButton = true, buttonText = '', buttonLink = 'index.html', buttonClass = 'btn-primary', isNew = false) {
         const div = document.createElement('div');
-        div.className = 'update-input-row';
-        div.style.border = '1px solid var(--card-border)';
+        div.className = 'update-input-row' + (isNew ? ' new-update-form' : '');
+        div.draggable = !isNew;
+        div.style.border = isNew ? '2px dashed var(--accent-gold)' : '1px solid var(--card-border)';
         div.style.padding = '15px';
         div.style.marginBottom = '15px';
         div.style.borderRadius = '8px';
+        div.style.cursor = isNew ? 'default' : 'grab';
+        div.style.backgroundColor = 'var(--card-bg)';
+        div.style.transition = 'opacity 0.2s';
+        
         div.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="color: var(--text-muted); pointer-events: none;">
+                    ${isNew ? '<i class="fa-solid fa-plus"></i> Nieuwe Update Maken' : '<i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen'}
+                </div>
+                ${isNew ? '<button type="button" class="btn btn-secondary cancel-update-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-xmark"></i> Annuleren</button>' : '<button type="button" class="btn btn-secondary remove-update-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash"></i> Verwijder Update</button>'}
+            </div>
             <div class="form-group"><input type="text" class="update-date" placeholder="Date (e.g. MAY 2 2026)" value="${date}"></div>
             <div class="form-group"><input type="text" class="update-title" placeholder="Title" value="${title}"></div>
             <div class="form-group"><textarea class="update-description" placeholder="Description" style="width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-family: 'Inter';">${description}</textarea></div>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div class="form-group toggle-row" style="margin-bottom: 10px;">
+                <label>Actieknop tonen? <span class="btn-status-text" style="color: var(--text-muted); font-weight: normal; margin-left: 10px;">${hasButton ? '' : '(Button off)'}</span></label>
+                <label class="toggle-switch">
+                    <input type="checkbox" class="update-btn-toggle" ${hasButton ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="btn-inputs-container" style="display: ${hasButton ? 'flex' : 'none'}; gap: 10px; margin-bottom: 10px;">
                 <input type="text" class="update-btn-text" placeholder="Button Text" value="${buttonText}" style="flex: 1;">
                 <input type="text" class="update-btn-link" placeholder="Button Link" value="${buttonLink}" style="flex: 1;">
                 <select class="update-btn-class" style="flex: 1;">
@@ -207,28 +228,101 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="btn-secondary" ${buttonClass === 'btn-secondary' ? 'selected' : ''}>Secondary (Outline)</option>
                 </select>
             </div>
-            <button type="button" class="btn btn-secondary remove-update-btn"><i class="fa-solid fa-trash"></i> Verwijder Update</button>
+            ${isNew ? '<button type="button" class="btn btn-primary confirm-add-btn" style="width: 100%; margin-top: 10px;">ADD UPDATE</button>' : ''}
         `;
 
-        // Auto-save on any update field change
-        div.querySelector('.update-date').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.update-title').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.update-description').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.update-btn-text').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.update-btn-link').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.update-btn-class').addEventListener('change', scheduleAutoSave);
+        const btnToggle = div.querySelector('.update-btn-toggle');
+        const btnContainer = div.querySelector('.btn-inputs-container');
+        const btnStatus = div.querySelector('.btn-status-text');
 
-        div.querySelector('.remove-update-btn').addEventListener('click', () => {
-            div.remove();
-            scheduleAutoSave();
+        btnToggle.addEventListener('change', () => {
+            if (btnToggle.checked) {
+                btnContainer.style.display = 'flex';
+                btnStatus.textContent = '';
+            } else {
+                btnContainer.style.display = 'none';
+                btnStatus.textContent = '(Button off)';
+            }
+            if (!isNew) scheduleAutoSave();
         });
+
+        if (isNew) {
+            // Logic for a new, unsaved update form
+            div.querySelector('.cancel-update-btn').addEventListener('click', () => {
+                div.remove();
+            });
+
+            div.querySelector('.confirm-add-btn').addEventListener('click', () => {
+                const newDate = div.querySelector('.update-date').value;
+                const newTitle = div.querySelector('.update-title').value;
+                const newDesc = div.querySelector('.update-description').value;
+                const newHasBtn = div.querySelector('.update-btn-toggle').checked;
+                const newBtnTxt = div.querySelector('.update-btn-text').value;
+                const newBtnLnk = div.querySelector('.update-btn-link').value;
+                const newBtnCls = div.querySelector('.update-btn-class').value;
+                
+                // Replace this form with a saved block
+                div.remove();
+                createUpdateInput(newDate, newTitle, newDesc, newHasBtn, newBtnTxt, newBtnLnk, newBtnCls, false);
+                scheduleAutoSave();
+            });
+        } else {
+            // Auto-save on any update field change for saved updates
+            div.querySelector('.update-date').addEventListener('input', scheduleAutoSave);
+            div.querySelector('.update-title').addEventListener('input', scheduleAutoSave);
+            div.querySelector('.update-description').addEventListener('input', scheduleAutoSave);
+            div.querySelector('.update-btn-text').addEventListener('input', scheduleAutoSave);
+            div.querySelector('.update-btn-link').addEventListener('input', scheduleAutoSave);
+            div.querySelector('.update-btn-class').addEventListener('change', scheduleAutoSave);
+
+            div.querySelector('.remove-update-btn').addEventListener('click', () => {
+                div.remove();
+                scheduleAutoSave();
+            });
+
+            // Drag and Drop Logic
+            div.addEventListener('dragstart', function(e) {
+                draggedUpdate = this;
+                setTimeout(() => this.style.opacity = '0.5', 0);
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            div.addEventListener('dragend', function() {
+                draggedUpdate = null;
+                this.style.opacity = '1';
+            });
+
+            div.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.border = '1px dashed var(--accent-gold)';
+            });
+
+            div.addEventListener('dragleave', function() {
+                this.style.border = '1px solid var(--card-border)';
+            });
+
+            div.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.border = '1px solid var(--card-border)';
+                if (draggedUpdate !== this) {
+                    const allUpdates = [...updatesListContainer.querySelectorAll('.update-input-row:not(.new-update-form)')];
+                    const draggedIndex = allUpdates.indexOf(draggedUpdate);
+                    const targetIndex = allUpdates.indexOf(this);
+                    if (draggedIndex < targetIndex) {
+                        this.after(draggedUpdate);
+                    } else {
+                        this.before(draggedUpdate);
+                    }
+                    scheduleAutoSave();
+                }
+            });
+        }
 
         updatesListContainer.appendChild(div);
     }
 
     addUpdateBtn.addEventListener('click', () => {
-        createUpdateInput();
-        scheduleAutoSave();
+        createUpdateInput('', '', '', true, '', 'index.html', 'btn-primary', true);
     });
 
     const defaultConfig = {
@@ -244,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 date: 'PLANNING: COMING SOON IN 2026',
                 title: 'Server opening',
                 description: 'Today the server will open for everyone to play! Get ready for an amazing adventure.',
+                hasButton: true,
                 buttonText: 'SERVER START',
                 buttonLink: 'index.html',
                 buttonClass: 'btn-primary'
@@ -279,7 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updatesListContainer.innerHTML = '';
             const updatesList = (data.updates && Array.isArray(data.updates)) ? data.updates : defaultConfig.updates;
             updatesList.forEach(upd => {
-                createUpdateInput(upd.date, upd.title, upd.description, upd.buttonText, upd.buttonLink, upd.buttonClass);
+                const hasBtn = upd.hasButton !== undefined ? upd.hasButton : (upd.buttonText ? true : false);
+                createUpdateInput(upd.date, upd.title, upd.description, hasBtn, upd.buttonText, upd.buttonLink, upd.buttonClass);
             });
 
         } catch (error) {

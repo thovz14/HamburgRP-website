@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (updatesContainer && data.updates) {
             updatesContainer.innerHTML = '';
             data.updates.forEach(update => {
+                const showButton = update.hasButton !== undefined ? update.hasButton : !!update.buttonText;
                 const card = document.createElement('div');
                 card.className = 'update-card';
                 card.innerHTML = `
@@ -92,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="update-content">
                         <h2>${update.title}</h2>
                         <p>${update.description}</p>
-                        ${update.buttonText ? `<a href="${update.buttonLink}" class="btn ${update.buttonClass}">${update.buttonText}</a>` : ''}
+                        ${(showButton && update.buttonText) ? `<a href="${update.buttonLink}" class="btn ${update.buttonClass}">${update.buttonText}</a>` : ''}
                     </div>
                 `;
                 updatesContainer.appendChild(card);
