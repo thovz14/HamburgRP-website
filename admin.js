@@ -147,11 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" class="staff-id" placeholder="Roblox ID (cijfers)" value="${userid}">
             <input type="text" class="staff-rank" placeholder="Rank (e.g. OWNER)" value="${rank}">
             <select class="staff-class">
-                <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Gold Badge</option>
-                <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Red Badge</option>
-                <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Purple Badge</option>
-                <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Green Badge</option>
-                <option value="badge" ${rankClass === 'badge' ? 'selected' : ''}>Default Badge</option>
+                <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Owner Badge</option>
+                <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Co-Owner Badge</option>
+                <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Developer Badge</option>
+                <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
             </select>
             <button type="button" class="btn btn-secondary remove-staff-btn"><i class="fa-solid fa-trash"></i></button>
         `;
