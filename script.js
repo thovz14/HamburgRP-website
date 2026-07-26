@@ -77,6 +77,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.remove('has-updates');
             }
         });
+
+        // Render updates on updates.html
+        const updatesContainer = document.getElementById('updates-container');
+        if (updatesContainer && data.updates) {
+            updatesContainer.innerHTML = '';
+            data.updates.forEach(update => {
+                const card = document.createElement('div');
+                card.className = 'update-card';
+                card.innerHTML = `
+                    <div class="update-meta">
+                        <span class="update-date">${update.date}</span>
+                    </div>
+                    <div class="update-content">
+                        <h2>${update.title}</h2>
+                        <p>${update.description}</p>
+                        ${update.buttonText ? `<a href="${update.buttonLink}" class="btn ${update.buttonClass}">${update.buttonText}</a>` : ''}
+                    </div>
+                `;
+                updatesContainer.appendChild(card);
+            });
+        }
     }
 
     async function fetchAvatar(userId, imgId) {

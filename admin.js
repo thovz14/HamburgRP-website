@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const configDiscord = document.getElementById('config-discord');
     const staffListContainer = document.getElementById('staff-list');
     const addStaffBtn = document.getElementById('add-staff-btn');
+    const updatesListContainer = document.getElementById('updates-list');
+    const addUpdateBtn = document.getElementById('add-update-btn');
     const saveStatus = document.getElementById('save-status');
     const configUpdatesBadge = document.getElementById('config-updates-badge');
 
@@ -100,11 +102,22 @@ document.addEventListener('DOMContentLoaded', () => {
             deaths: '0'
         }));
 
+        const updateInputs = document.querySelectorAll('.update-input-row');
+        const updates = Array.from(updateInputs).map(row => ({
+            date: row.querySelector('.update-date').value,
+            title: row.querySelector('.update-title').value,
+            description: row.querySelector('.update-description').value,
+            buttonText: row.querySelector('.update-btn-text').value,
+            buttonLink: row.querySelector('.update-btn-link').value,
+            buttonClass: row.querySelector('.update-btn-class').value
+        }));
+
         const configData = {
             serverIP: configIp.value,
             discordLink: configDiscord.value,
             hasNewUpdates: configUpdatesBadge.checked,
-            staff: staff
+            staff: staff,
+            updates: updates
         };
 
         try {
@@ -174,6 +187,50 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleAutoSave();
     });
 
+    // Update creation
+    function createUpdateInput(date = '', title = '', description = '', buttonText = '', buttonLink = 'index.html', buttonClass = 'btn-primary') {
+        const div = document.createElement('div');
+        div.className = 'update-input-row';
+        div.style.border = '1px solid var(--card-border)';
+        div.style.padding = '15px';
+        div.style.marginBottom = '15px';
+        div.style.borderRadius = '8px';
+        div.innerHTML = `
+            <div class="form-group"><input type="text" class="update-date" placeholder="Date (e.g. MAY 2 2026)" value="${date}"></div>
+            <div class="form-group"><input type="text" class="update-title" placeholder="Title" value="${title}"></div>
+            <div class="form-group"><textarea class="update-description" placeholder="Description" style="width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-family: 'Inter';">${description}</textarea></div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" class="update-btn-text" placeholder="Button Text" value="${buttonText}" style="flex: 1;">
+                <input type="text" class="update-btn-link" placeholder="Button Link" value="${buttonLink}" style="flex: 1;">
+                <select class="update-btn-class" style="flex: 1;">
+                    <option value="btn-primary" ${buttonClass === 'btn-primary' ? 'selected' : ''}>Primary (White)</option>
+                    <option value="btn-secondary" ${buttonClass === 'btn-secondary' ? 'selected' : ''}>Secondary (Outline)</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-secondary remove-update-btn"><i class="fa-solid fa-trash"></i> Verwijder Update</button>
+        `;
+
+        // Auto-save on any update field change
+        div.querySelector('.update-date').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.update-title').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.update-description').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.update-btn-text').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.update-btn-link').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.update-btn-class').addEventListener('change', scheduleAutoSave);
+
+        div.querySelector('.remove-update-btn').addEventListener('click', () => {
+            div.remove();
+            scheduleAutoSave();
+        });
+
+        updatesListContainer.appendChild(div);
+    }
+
+    addUpdateBtn.addEventListener('click', () => {
+        createUpdateInput();
+        scheduleAutoSave();
+    });
+
     const defaultConfig = {
         serverIP: 'Roblox Hamburg RP',
         discordLink: 'https://discord.gg/mQt4J5Brug',
@@ -181,6 +238,16 @@ document.addEventListener('DOMContentLoaded', () => {
         staff: [
             { name: 'tienmaster10', userid: '2434076326', rank: 'OWNER', rankClass: 'owner-badge' },
             { name: 'j3ss3_0182', userid: '12345678', rank: 'CO-OWNER', rankClass: 'co-owner-badge' }
+        ],
+        updates: [
+            {
+                date: 'PLANNING: COMING SOON IN 2026',
+                title: 'Server opening',
+                description: 'Today the server will open for everyone to play! Get ready for an amazing adventure.',
+                buttonText: 'SERVER START',
+                buttonLink: 'index.html',
+                buttonClass: 'btn-primary'
+            }
         ]
     };
 
@@ -207,6 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const staffList = (data.staff && Array.isArray(data.staff)) ? data.staff : defaultConfig.staff;
             staffList.forEach(staff => {
                 createStaffInput(staff.name, staff.userid || '', staff.rank, staff.rankClass);
+            });
+
+            updatesListContainer.innerHTML = '';
+            const updatesList = (data.updates && Array.isArray(data.updates)) ? data.updates : defaultConfig.updates;
+            updatesList.forEach(upd => {
+                createUpdateInput(upd.date, upd.title, upd.description, upd.buttonText, upd.buttonLink, upd.buttonClass);
             });
 
         } catch (error) {
