@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const staffInputs = document.querySelectorAll('.staff-input-row');
         const staff = Array.from(staffInputs).map(row => ({
             name: row.querySelector('.staff-name').value,
+            userid: row.querySelector('.staff-id').value,
             rank: row.querySelector('.staff-rank').value,
             rankClass: row.querySelector('.staff-class').value,
             playtime: '0',
@@ -138,11 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Staff member creation
-    function createStaffInput(name = '', rank = 'OWNER', rankClass = 'owner-badge') {
+    function createStaffInput(name = '', userid = '', rank = 'OWNER', rankClass = 'owner-badge') {
         const div = document.createElement('div');
         div.className = 'staff-input-row';
         div.innerHTML = `
-            <input type="text" class="staff-name" placeholder="Minecraft Name" value="${name}">
+            <input type="text" class="staff-name" placeholder="Roblox Name" value="${name}">
+            <input type="text" class="staff-id" placeholder="Roblox ID (cijfers)" value="${userid}">
             <input type="text" class="staff-rank" placeholder="Rank (e.g. OWNER)" value="${rank}">
             <select class="staff-class">
                 <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Gold Badge</option>
@@ -154,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-save on any staff field change
         div.querySelector('.staff-name').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.staff-id').addEventListener('input', scheduleAutoSave);
         div.querySelector('.staff-rank').addEventListener('input', scheduleAutoSave);
         div.querySelector('.staff-class').addEventListener('change', scheduleAutoSave);
 
@@ -171,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const defaultConfig = {
-        serverIP: 'play.papersmp.net',
-        discordLink: 'https://discord.gg/ZbnKDTS7kx',
+        serverIP: 'Roblox Hamburg RP',
+        discordLink: 'https://discord.gg/mQt4J5Brug',
         hasNewUpdates: false,
         staff: [
-            { name: 'Thomasvz14', rank: 'OWNER', rankClass: 'owner-badge' },
-            { name: 'milanotje1', rank: 'CO-OWNER', rankClass: 'co-owner-badge' }
+            { name: 'tienmaster10', userid: '2434076326', rank: 'OWNER', rankClass: 'owner-badge' },
+            { name: 'j3ss3_0182', userid: '12345678', rank: 'CO-OWNER', rankClass: 'co-owner-badge' }
         ]
     };
 
@@ -202,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             staffListContainer.innerHTML = '';
             const staffList = (data.staff && Array.isArray(data.staff)) ? data.staff : defaultConfig.staff;
             staffList.forEach(staff => {
-                createStaffInput(staff.name, staff.rank, staff.rankClass);
+                createStaffInput(staff.name, staff.userid || '', staff.rank, staff.rankClass);
             });
 
         } catch (error) {
