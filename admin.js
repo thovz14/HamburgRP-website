@@ -199,19 +199,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function createStaffInput(name = '', userid = '', badges = [{rank: 'OWNER', rankClass: 'owner-badge'}]) {
         const div = document.createElement('div');
         div.className = 'staff-input-row';
-        div.draggable = true;
+        div.draggable = false;
         div.style.flexDirection = 'column';
         div.style.border = '1px solid var(--card-border)';
         div.style.padding = '15px';
         div.style.marginBottom = '15px';
         div.style.borderRadius = '8px';
-        div.style.cursor = 'grab';
         div.style.backgroundColor = 'var(--card-bg)';
         div.style.transition = 'opacity 0.2s';
         
         div.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; width: 100%;">
-                <div style="color: var(--text-muted); pointer-events: none;"><i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen</div>
+                <div class="drag-handle" style="color: var(--text-muted); padding: 5px; cursor: grab;"><i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen</div>
                 <button type="button" class="btn btn-secondary remove-staff-btn" style="padding: 5px 10px; font-size: 0.8rem; flex: unset;"><i class="fa-solid fa-trash"></i> Verwijder Staf</button>
             </div>
             <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%;">
@@ -275,6 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
             scheduleAutoSave();
         });
 
+        const dragHandle = div.querySelector('.drag-handle');
+        if (dragHandle) {
+            dragHandle.addEventListener('mouseenter', () => div.draggable = true);
+            dragHandle.addEventListener('mouseleave', () => div.draggable = false);
+        }
+
         // Drag and Drop Logic
         div.addEventListener('dragstart', function(e) {
             draggedStaff = this;
@@ -326,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createUpdateInput(date = '', title = '', description = '', hasButton = true, buttonText = '', buttonLink = 'index.html', buttonClass = 'btn-primary', isNew = false) {
         const div = document.createElement('div');
         div.className = 'update-input-row' + (isNew ? ' new-update-form' : '');
-        div.draggable = !isNew;
+        div.draggable = false;
         div.style.border = isNew ? '2px dashed var(--accent-gold)' : '1px solid var(--card-border)';
         div.style.padding = '15px';
         div.style.marginBottom = '15px';
@@ -337,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         div.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                <div style="color: var(--text-muted); pointer-events: none;">
+                <div class="drag-handle" style="color: var(--text-muted); padding: 5px; cursor: ${isNew ? 'default' : 'grab'};">
                     ${isNew ? '<i class="fa-solid fa-plus"></i> Nieuwe Update Maken' : '<i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen'}
                 </div>
                 ${isNew ? '<button type="button" class="btn btn-secondary cancel-update-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-xmark"></i> Annuleren</button>' : '<button type="button" class="btn btn-secondary remove-update-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash"></i> Verwijder Update</button>'}
@@ -411,6 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.remove();
                 scheduleAutoSave();
             });
+
+            const dragHandle = div.querySelector('.drag-handle');
+            if (dragHandle) {
+                dragHandle.addEventListener('mouseenter', () => div.draggable = true);
+                dragHandle.addEventListener('mouseleave', () => div.draggable = false);
+            }
 
             // Drag and Drop Logic
             div.addEventListener('dragstart', function(e) {
