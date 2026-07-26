@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const discordWidget = document.querySelector('.widget[data-type="discord"]');
             if (discordWidget) {
                 discordWidget.setAttribute('data-copy', data.discordLink);
+                updateDiscordCount(data.discordLink);
             }
         }
 
@@ -112,4 +113,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    async function updateDiscordCount(inviteUrl) {
+        try {
+            // Extract invite code from URL (e.g. https://discord.gg/mQt4J5Brug)
+            const match = inviteUrl.match(/discord\.gg\/([a-zA-Z0-9-]+)/);
+            if (!match) return;
+            const inviteCode = match[1];
+
+            const response = await fetch(`https://discord.com/api/v9/invites/${inviteCode}?with_counts=true`);
+            const data = await response.json();
+
+            if (data && data.approximate_member_count !== undefined) {
+                const countEl = document.getElementById('discord-count');
+                if (countEl) {
+                    countEl.textContent = `${data.approximate_member_count} members in the discord`;
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching Discord count:', error);
+            const countEl = document.getElementById('discord-count');
+            if (countEl) {
+                countEl.textContent = 'Join our community!';
+            }
+        }
+    }
 });
