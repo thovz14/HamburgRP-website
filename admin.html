@@ -58,12 +58,20 @@
 
                 <div class="form-section">
                     <h3>Notifications</h3>
-                    <div class="form-group toggle-row">
+                    <div class="form-group toggle-row" style="margin-bottom: 10px;">
                         <label for="config-updates-badge">New Updates badge (gold glow on Updates tab)</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="config-updates-badge">
-                            <span class="toggle-slider"></span>
-                        </label>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="config-updates-badge">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <select id="config-updates-duration" style="display: none; width: auto; padding: 6px 12px; font-size: 0.9rem;">
+                                <option value="1">1 uur</option>
+                                <option value="24" selected>24 uur</option>
+                                <option value="48">48 uur</option>
+                                <option value="168">1 week</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 

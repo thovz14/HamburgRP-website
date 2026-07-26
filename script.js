@@ -70,8 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update "Updates" nav link gold glow
         const updatesLinks = document.querySelectorAll('.nav-link[href="updates.html"]');
+        let showBadge = data.hasNewUpdates;
+        if (showBadge && data.updatesBadgeExpiresAt && Date.now() > data.updatesBadgeExpiresAt) {
+            showBadge = false;
+        }
+
         updatesLinks.forEach(link => {
-            if (data.hasNewUpdates) {
+            if (showBadge) {
                 link.classList.add('has-updates');
             } else {
                 link.classList.remove('has-updates');

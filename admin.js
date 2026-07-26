@@ -17,18 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const addUpdateBtn = document.getElementById('add-update-btn');
     const saveStatus = document.getElementById('save-status');
     const configUpdatesBadge = document.getElementById('config-updates-badge');
+    const configUpdatesDuration = document.getElementById('config-updates-duration');
 
     let saveTimeout = null;
-    let isLoading = false; // Prevent auto-save while loading data
+    let isLoading = false;
+    let currentBadgeExpiration = null;
 
     // Gold glow on Updates nav link (works on admin page too)
     const configRef = doc(db, 'config', 'website');
     onSnapshot(configRef, (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
+            let showBadge = data.hasNewUpdates;
+            if (showBadge && data.updatesBadgeExpiresAt && Date.now() > data.updatesBadgeExpiresAt) {
+                showBadge = false;
+            }
             const updatesLinks = document.querySelectorAll('.nav-link[href="updates.html"]');
             updatesLinks.forEach(link => {
-                if (data.hasNewUpdates) {
+                if (showBadge) {
                     link.classList.add('has-updates');
                 } else {
                     link.classList.remove('has-updates');
@@ -113,10 +119,24 @@ document.addEventListener('DOMContentLoaded', () => {
             buttonClass: row.querySelector('.update-btn-class').value
         }));
 
+        let expiresAt = null;
+        if (configUpdatesBadge.checked) {
+            if (currentBadgeExpiration && Date.now() < currentBadgeExpiration) {
+                expiresAt = currentBadgeExpiration;
+            } else {
+                const hours = parseInt(configUpdatesDuration.value) || 24;
+                expiresAt = Date.now() + (hours * 60 * 60 * 1000);
+                currentBadgeExpiration = expiresAt;
+            }
+        } else {
+            currentBadgeExpiration = null;
+        }
+
         const configData = {
             serverIP: configIp.value,
             discordLink: configDiscord.value,
             hasNewUpdates: configUpdatesBadge.checked,
+            updatesBadgeExpiresAt: expiresAt,
             staff: staff,
             updates: updates
         };
@@ -136,7 +156,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for changes on IP, Discord, and toggle
     configIp.addEventListener('input', scheduleAutoSave);
     configDiscord.addEventListener('input', scheduleAutoSave);
+    
+    configUpdatesDuration.addEventListener('change', () => {
+        const hours = parseInt(configUpdatesDuration.value) || 24;
+        currentBadgeExpiration = Date.now() + (hours * 60 * 60 * 1000);
+        scheduleAutoSave();
+    });
+
     configUpdatesBadge.addEventListener('change', () => {
+        configUpdatesDuration.style.display = configUpdatesBadge.checked ? 'block' : 'none';
+        if (configUpdatesBadge.checked) {
+            const hours = parseInt(configUpdatesDuration.value) || 24;
+            currentBadgeExpiration = Date.now() + (hours * 60 * 60 * 1000);
+        } else {
+            currentBadgeExpiration = null;
+        }
         updateUpdatesNavState(configUpdatesBadge.checked);
         scheduleAutoSave();
     });
@@ -152,21 +186,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let draggedStaff = null;
+
     // Staff member creation
     function createStaffInput(name = '', userid = '', rank = 'OWNER', rankClass = 'owner-badge') {
         const div = document.createElement('div');
         div.className = 'staff-input-row';
+        div.draggable = true;
+        div.style.flexDirection = 'column';
+        div.style.border = '1px solid var(--card-border)';
+        div.style.padding = '15px';
+        div.style.marginBottom = '15px';
+        div.style.borderRadius = '8px';
+        div.style.cursor = 'grab';
+        div.style.backgroundColor = 'var(--card-bg)';
+        div.style.transition = 'opacity 0.2s';
+        
         div.innerHTML = `
-            <input type="text" class="staff-name" placeholder="Roblox Name" value="${name}">
-            <input type="text" class="staff-id" placeholder="Roblox ID (cijfers)" value="${userid}">
-            <input type="text" class="staff-rank" placeholder="Rank (e.g. OWNER)" value="${rank}">
-            <select class="staff-class">
-                <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Owner Badge</option>
-                <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Co-Owner Badge</option>
-                <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Developer Badge</option>
-                <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
-            </select>
-            <button type="button" class="btn btn-secondary remove-staff-btn"><i class="fa-solid fa-trash"></i></button>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; width: 100%;">
+                <div style="color: var(--text-muted); pointer-events: none;"><i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen</div>
+                <button type="button" class="btn btn-secondary remove-staff-btn" style="padding: 5px 10px; font-size: 0.8rem; flex: unset;"><i class="fa-solid fa-trash"></i> Verwijder Staf</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%;">
+                <input type="text" class="staff-name" placeholder="Roblox Name" value="${name}" style="flex: 2;">
+                <input type="text" class="staff-id" placeholder="Roblox ID (cijfers)" value="${userid}" style="flex: 1;">
+            </div>
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <input type="text" class="staff-rank" placeholder="Rank (e.g. OWNER)" value="${rank}" style="flex: 1;">
+                <select class="staff-class" style="flex: 1;">
+                    <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Owner Badge</option>
+                    <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Co-Owner Badge</option>
+                    <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Developer Badge</option>
+                    <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
+                    <option value="builder-badge" ${rankClass === 'builder-badge' ? 'selected' : ''}>Builder Badge</option>
+                </select>
+            </div>
         `;
 
         // Auto-save on any staff field change
@@ -178,6 +232,43 @@ document.addEventListener('DOMContentLoaded', () => {
         div.querySelector('.remove-staff-btn').addEventListener('click', () => {
             div.remove();
             scheduleAutoSave();
+        });
+
+        // Drag and Drop Logic
+        div.addEventListener('dragstart', function(e) {
+            draggedStaff = this;
+            setTimeout(() => this.style.opacity = '0.5', 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        div.addEventListener('dragend', function() {
+            draggedStaff = null;
+            this.style.opacity = '1';
+        });
+
+        div.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.border = '1px dashed var(--accent-gold)';
+        });
+
+        div.addEventListener('dragleave', function() {
+            this.style.border = '1px solid var(--card-border)';
+        });
+
+        div.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.border = '1px solid var(--card-border)';
+            if (draggedStaff !== this && draggedStaff !== null) {
+                const allStaff = [...staffListContainer.querySelectorAll('.staff-input-row')];
+                const draggedIndex = allStaff.indexOf(draggedStaff);
+                const targetIndex = allStaff.indexOf(this);
+                if (draggedIndex < targetIndex) {
+                    this.after(draggedStaff);
+                } else {
+                    this.before(draggedStaff);
+                }
+                scheduleAutoSave();
+            }
         });
 
         staffListContainer.appendChild(div);
@@ -362,7 +453,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             configIp.value = data.serverIP || defaultConfig.serverIP;
             configDiscord.value = data.discordLink || defaultConfig.discordLink;
-            configUpdatesBadge.checked = data.hasNewUpdates || false;
+            
+            if (data.hasNewUpdates) {
+                if (data.updatesBadgeExpiresAt && Date.now() > data.updatesBadgeExpiresAt) {
+                    configUpdatesBadge.checked = false;
+                    currentBadgeExpiration = null;
+                } else {
+                    configUpdatesBadge.checked = true;
+                    currentBadgeExpiration = data.updatesBadgeExpiresAt || null;
+                }
+            } else {
+                configUpdatesBadge.checked = false;
+                currentBadgeExpiration = null;
+            }
+            
+            configUpdatesDuration.style.display = configUpdatesBadge.checked ? 'block' : 'none';
             updateUpdatesNavState(configUpdatesBadge.checked);
 
             staffListContainer.innerHTML = '';

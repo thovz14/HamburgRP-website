@@ -363,6 +363,12 @@ body {
     border: 1px solid rgb(119, 3, 128);
 }
 
+.builder-badge {
+    background: rgb(45, 3, 156);
+    color: rgb(134, 7, 252);
+    border: 1px solid rgb(45, 3, 156);
+}
+
 .admin-badge {
     background: rgba(46, 204, 113, 0.15); /* Transparant groene achtergrond */
     color: #2ecc71; /* Groene tekst */
