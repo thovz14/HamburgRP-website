@@ -49,7 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="owner-info">
                             <h3>${staff.name}</h3>
-                            <span class="badge ${staff.rankClass}">${staff.rank}</span>
+                            <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                ${staff.badges ? staff.badges.map(b => `<span class="badge ${b.rankClass}">${b.rank}</span>`).join('') : `<span class="badge ${staff.rankClass}">${staff.rank}</span>`}
+                            </div>
                         </div>
                     `;
                     

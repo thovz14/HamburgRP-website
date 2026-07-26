@@ -98,15 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function autoSave() {
         const staffInputs = document.querySelectorAll('.staff-input-row');
-        const staff = Array.from(staffInputs).map(row => ({
-            name: row.querySelector('.staff-name').value,
-            userid: row.querySelector('.staff-id').value,
-            rank: row.querySelector('.staff-rank').value,
-            rankClass: row.querySelector('.staff-class').value,
-            playtime: '0',
-            kills: '0',
-            deaths: '0'
-        }));
+        const staff = Array.from(staffInputs).map(row => {
+            const badgeRows = row.querySelectorAll('.badge-input-row');
+            const badges = Array.from(badgeRows).map(bRow => ({
+                rank: bRow.querySelector('.staff-rank').value,
+                rankClass: bRow.querySelector('.staff-class').value
+            }));
+
+            return {
+                name: row.querySelector('.staff-name').value,
+                userid: row.querySelector('.staff-id').value,
+                badges: badges,
+                playtime: '0',
+                kills: '0',
+                deaths: '0'
+            };
+        });
 
         const updateInputs = document.querySelectorAll('.update-input-row:not(.new-update-form)');
         const updates = Array.from(updateInputs).map(row => ({
@@ -189,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedStaff = null;
 
     // Staff member creation
-    function createStaffInput(name = '', userid = '', rank = 'OWNER', rankClass = 'owner-badge') {
+    function createStaffInput(name = '', userid = '', badges = [{rank: 'OWNER', rankClass: 'owner-badge'}]) {
         const div = document.createElement('div');
         div.className = 'staff-input-row';
         div.draggable = true;
@@ -211,7 +218,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="text" class="staff-name" placeholder="Roblox Name" value="${name}" style="flex: 2;">
                 <input type="text" class="staff-id" placeholder="Roblox ID (cijfers)" value="${userid}" style="flex: 1;">
             </div>
-            <div style="display: flex; gap: 10px; width: 100%;">
+            <div class="badges-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <!-- badges here -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm add-badge-btn" style="align-self: flex-start; margin-top: 10px;">+ Voeg badge toe (Max 3)</button>
+        `;
+
+        const badgesContainer = div.querySelector('.badges-container');
+        const addBadgeBtn = div.querySelector('.add-badge-btn');
+
+        const addBadgeRow = (rank, rankClass) => {
+            if (badgesContainer.children.length >= 3) return;
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'badge-input-row';
+            badgeRow.style.display = 'flex';
+            badgeRow.style.gap = '10px';
+            badgeRow.style.width = '100%';
+            badgeRow.innerHTML = `
                 <input type="text" class="staff-rank" placeholder="Rank (e.g. OWNER)" value="${rank}" style="flex: 1;">
                 <select class="staff-class" style="flex: 1;">
                     <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Owner Badge</option>
@@ -220,14 +243,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
                     <option value="builder-badge" ${rankClass === 'builder-badge' ? 'selected' : ''}>Builder Badge</option>
                 </select>
-            </div>
-        `;
+                <button type="button" class="btn btn-secondary remove-badge-btn" style="padding: 5px 10px;"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            
+            badgeRow.querySelector('.staff-rank').addEventListener('input', scheduleAutoSave);
+            badgeRow.querySelector('.staff-class').addEventListener('change', scheduleAutoSave);
+            badgeRow.querySelector('.remove-badge-btn').addEventListener('click', () => {
+                badgeRow.remove();
+                addBadgeBtn.style.display = 'block';
+                scheduleAutoSave();
+            });
+
+            badgesContainer.appendChild(badgeRow);
+
+            if (badgesContainer.children.length >= 3) {
+                addBadgeBtn.style.display = 'none';
+            }
+            scheduleAutoSave();
+        };
+
+        badges.forEach(b => addBadgeRow(b.rank, b.rankClass));
+
+        addBadgeBtn.addEventListener('click', () => addBadgeRow('NEW', 'owner-badge'));
 
         // Auto-save on any staff field change
         div.querySelector('.staff-name').addEventListener('input', scheduleAutoSave);
         div.querySelector('.staff-id').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.staff-rank').addEventListener('input', scheduleAutoSave);
-        div.querySelector('.staff-class').addEventListener('change', scheduleAutoSave);
 
         div.querySelector('.remove-staff-btn').addEventListener('click', () => {
             div.remove();
@@ -421,8 +462,8 @@ document.addEventListener('DOMContentLoaded', () => {
         discordLink: 'https://discord.gg/mQt4J5Brug',
         hasNewUpdates: false,
         staff: [
-            { name: 'tienmaster10', userid: '2434076326', rank: 'OWNER', rankClass: 'owner-badge' },
-            { name: 'j3ss3_0182', userid: '12345678', rank: 'CO-OWNER', rankClass: 'co-owner-badge' }
+            { name: 'tienmaster10', userid: '2434076326', badges: [{rank: 'OWNER', rankClass: 'owner-badge'}] },
+            { name: 'j3ss3_0182', userid: '12345678', badges: [{rank: 'CO-OWNER', rankClass: 'co-owner-badge'}] }
         ],
         updates: [
             {
@@ -473,7 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
             staffListContainer.innerHTML = '';
             const staffList = (data.staff && Array.isArray(data.staff)) ? data.staff : defaultConfig.staff;
             staffList.forEach(staff => {
-                createStaffInput(staff.name, staff.userid || '', staff.rank, staff.rankClass);
+                let badges = staff.badges;
+                if (!badges && staff.rank) {
+                    badges = [{rank: staff.rank, rankClass: staff.rankClass}];
+                }
+                createStaffInput(staff.name, staff.userid || '', badges);
             });
 
             updatesListContainer.innerHTML = '';

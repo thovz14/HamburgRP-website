@@ -364,9 +364,9 @@ body {
 }
 
 .builder-badge {
-    background: rgb(45, 3, 156);
+    background: rgba(134, 7, 252, 0.15);
     color: rgb(134, 7, 252);
-    border: 1px solid rgb(45, 3, 156);
+    border: 1px solid rgba(134, 7, 252, 0.3);
 }
 
 .admin-badge {
