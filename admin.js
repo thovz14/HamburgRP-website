@@ -149,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <select class="staff-class">
                 <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Gold Badge</option>
                 <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Red Badge</option>
+                <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Purple Badge</option>
+                <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Green Badge</option>
                 <option value="badge" ${rankClass === 'badge' ? 'selected' : ''}>Default Badge</option>
             </select>
             <button type="button" class="btn btn-secondary remove-staff-btn"><i class="fa-solid fa-trash"></i></button>

@@ -1,0 +1,47 @@
+HOE VOEG IK NIEUWE BADGES TOE AAN DE WEBSITE?
+
+Het toevoegen van een nieuwe badge (zoals Developer, Moderator, etc.) vereist twee simpele stappen. Je moet de opmaak (kleur) toevoegen aan het design, én je moet zorgen dat hij selecteerbaar is in het Admin paneel.
+
+---
+
+STAP 1: KLEUR EN OPMAAK TOEVOEGEN (style.css)
+
+Open het bestand "style.css" en zoek (ongeveer rond regel 340) naar de ".badge" code. Daaronder zie je de ".owner-badge" en ".co-owner-badge" staan.
+
+Voeg je eigen nieuwe badge-klasse toe, bijvoorbeeld voor een admin:
+
+.admin-badge {
+    background: rgba(46, 204, 113, 0.15); /* Transparant groene achtergrond */
+    color: #2ecc71; /* Groene tekst */
+    border: 1px solid rgba(46, 204, 113, 0.3); /* Groen randje */
+}
+
+---
+
+STAP 2: BESCHIKBAAR MAKEN IN HET ADMIN PANEEL (admin.js)
+
+Nu de kleur bestaat, moet je hem nog in het lijstje zetten zodat je hem kan aanklikken als je een nieuw teamlid toevoegt in het paneel.
+
+Open het bestand "admin.js" en zoek naar de functie "createStaffInput". Dat is ongeveer rond regel 145.
+
+Je ziet daar een lijstje met "<option value=...". Voeg jouw nieuwe badge toe aan de lijst! 
+
+Het ziet er dan zo uit:
+
+<select class="staff-class">
+    <option value="owner-badge" ${rankClass === 'owner-badge' ? 'selected' : ''}>Gold Badge</option>
+    <option value="co-owner-badge" ${rankClass === 'co-owner-badge' ? 'selected' : ''}>Red Badge</option>
+    
+    <!-- VOEG HIER JE NIEUWE BADGE TOE -->
+    <option value="developer-badge" ${rankClass === 'developer-badge' ? 'selected' : ''}>Developer Badge</option>
+    <option value="admin-badge" ${rankClass === 'admin-badge' ? 'selected' : ''}>Admin Badge</option>
+    
+    <option value="badge" ${rankClass === 'badge' ? 'selected' : ''}>Default Badge</option>
+</select>
+
+LET OP: 
+1. De "value" (bijv. "developer-badge") MOET exact hetzelfde geschreven zijn als de klasse uit je style.css.
+2. Zorg dat je het stukje `${rankClass === 'jouw-badge' ? 'selected' : ''}` niet vergeet! Dat zorgt er namelijk voor dat als je de pagina herlaadt, hij nog steeds onthoudt welke badge je had geselecteerd.
+3. De tekst (zoals "Developer Badge") is simpelweg wat jij te zien krijgt in het uitklapmenuutje in je dashboard.
+
+Klaar! Sla de bestanden op. Je kunt nu in je Admin paneel de nieuwe badge selecteren voor een teamlid.

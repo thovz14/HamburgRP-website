@@ -357,6 +357,18 @@ body {
     border: 1px solid rgba(243, 18, 18, 0.3);
 }
 
+.developer-badge {
+    background: rgb(146, 3, 156);
+    color: var(--accent-red);
+    border: 1px solid rgb(119, 3, 128);
+}
+
+.admin-badge {
+    background: rgba(46, 204, 113, 0.15); /* Transparant groene achtergrond */
+    color: #2ecc71; /* Groene tekst */
+    border: 1px solid rgba(46, 204, 113, 0.3); /* Groen randje */
+}
+
 /* Updates Section */
 .updates {
     width: 100%;
