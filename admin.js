@@ -1,6 +1,7 @@
-import { auth, db } from './firebase-config.js';
+import { auth, db, storage } from './firebase-config.js';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginSection = document.getElementById('login-section');
@@ -358,16 +359,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <button type="button" class="btn btn-secondary remove-social-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash"></i> Verwijder Video</button>
             </div>
-            <div class="form-group"><input type="text" class="social-title" placeholder="Title" value="${title}"></div>
-            <div class="form-group">
-                <select class="social-platform">
-                    <option value="tiktok" ${platform === 'tiktok' ? 'selected' : ''}>TikTok</option>
-                    <option value="youtube" ${platform === 'youtube' ? 'selected' : ''}>YouTube</option>
-                </select>
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <!-- Thumbnail Preview -->
+                <div style="width: 120px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="width: 100%; aspect-ratio: 9/12; background: rgba(0,0,0,0.4); border-radius: 8px; overflow: hidden; border: 1px solid var(--card-border); position: relative;">
+                        <img class="social-thumb-preview" src="${thumbnail}" style="width: 100%; height: 100%; object-fit: cover; display: ${thumbnail ? 'block' : 'none'};">
+                        <div class="social-thumb-placeholder" style="position: absolute; inset: 0; display: ${thumbnail ? 'none' : 'flex'}; align-items: center; justify-content: center; color: var(--text-muted); font-size: 2rem;">
+                            <i class="fa-regular fa-image"></i>
+                        </div>
+                    </div>
+                    <label class="btn btn-secondary btn-sm" style="text-align: center; cursor: pointer; padding: 6px; font-size: 0.75rem;">
+                        <i class="fa-solid fa-upload"></i> Upload
+                        <input type="file" class="social-thumb-upload" accept="image/*" style="display: none;">
+                    </label>
+                    <span class="upload-status" style="font-size: 0.75rem; text-align: center; color: var(--accent-green);"></span>
+                </div>
+                
+                <!-- Inputs -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" class="social-title" placeholder="Titel van de video" value="${title}">
+                    <select class="social-platform">
+                        <option value="tiktok" ${platform === 'tiktok' ? 'selected' : ''}>TikTok</option>
+                        <option value="youtube" ${platform === 'youtube' ? 'selected' : ''}>YouTube</option>
+                    </select>
+                    <input type="text" class="social-link" placeholder="Video Link (e.g. https://tiktok.com/...)" value="${link}">
+                    <input type="text" class="social-thumbnail" placeholder="Thumbnail URL (Of laat leeg voor auto)" value="${thumbnail}" style="color: var(--text-muted); font-size: 0.85rem;">
+                </div>
             </div>
-            <div class="form-group"><input type="text" class="social-link" placeholder="Video Link (e.g. https://tiktok.com/...)" value="${link}"></div>
-            <div class="form-group"><input type="text" class="social-thumbnail" placeholder="Thumbnail URL (Optioneel, gaat automatisch)" value="${thumbnail}"></div>
         `;
+
+        const thumbPreview = div.querySelector('.social-thumb-preview');
+        const thumbPlaceholder = div.querySelector('.social-thumb-placeholder');
+        const thumbInput = div.querySelector('.social-thumbnail');
+
+        const updatePreview = (url) => {
+            if (url) {
+                thumbPreview.src = url;
+                thumbPreview.style.display = 'block';
+                thumbPlaceholder.style.display = 'none';
+            } else {
+                thumbPreview.style.display = 'none';
+                thumbPlaceholder.style.display = 'flex';
+            }
+        };
+
+        thumbInput.addEventListener('input', (e) => {
+            updatePreview(e.target.value);
+            scheduleAutoSave();
+        });
+
+        div.querySelector('.social-thumb-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const statusEl = div.querySelector('.upload-status');
+            statusEl.textContent = 'Verwerken...';
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 480;
+                    const MAX_HEIGHT = 640;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to highly compressed JPEG to save database space
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    thumbInput.value = dataUrl;
+                    updatePreview(dataUrl);
+                    statusEl.textContent = 'Opgeslagen!';
+                    scheduleAutoSave();
+                    setTimeout(() => statusEl.textContent = '', 3000);
+                };
+                img.onerror = () => {
+                    statusEl.textContent = 'Mislukt';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
 
         div.querySelector('.social-title').addEventListener('input', scheduleAutoSave);
         div.querySelector('.social-platform').addEventListener('change', scheduleAutoSave);
