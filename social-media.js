@@ -20,6 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add internal IDs for modal linking
             videos = videos.map((v, i) => ({ ...v, _id: i }));
             
+            // Updates nav badge logic
+            let showBadge = data.hasNewUpdates;
+            if (showBadge && data.updatesBadgeExpiresAt) {
+                if (Date.now() > data.updatesBadgeExpiresAt) {
+                    showBadge = false;
+                }
+            }
+            
+            const updateLink = document.querySelector('nav a[href="updates.html"]');
+            if (updateLink) {
+                if (showBadge) {
+                    updateLink.classList.add('has-update');
+                } else {
+                    updateLink.classList.remove('has-update');
+                }
+            }
+
             renderGrid();
         } else {
             console.log("No config document found!");
