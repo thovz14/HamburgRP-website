@@ -43,7 +43,13 @@ body {
     /* 16:9 aspect ratio */
     z-index: -1;
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0;
+    animation: fadeInVideo 1s ease-in 3.5s forwards;
+}
+
+@keyframes fadeInVideo {
+    from { opacity: 0; }
+    to { opacity: 0.5; }
 }
 
 /* Container */

@@ -48,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
             grid.appendChild(card);
 
             const renderCard = (thumb) => {
+                if (!card.parentNode) return;
+
                 const thumbHTML = thumb
                     ? `<img class="video-card-thumb" src="${escapeHTML(thumb)}" alt="${escapeHTML(video.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div class="video-card-no-img" style="display:none;">${video.platform === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : '<i class="fa-brands fa-tiktok"></i>'}</div>`
@@ -63,10 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 
-                // Remove old event listeners if updating
-                const newCard = card.cloneNode(true);
-                card.parentNode.replaceChild(newCard, card);
-                newCard.addEventListener('click', () => openDetail(video._id, thumb));
+                // Set click event directly to avoid multiple listeners
+                card.onclick = () => openDetail(video._id, thumb);
             };
 
             let thumbUrl = video.thumbnail;
@@ -81,10 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderCard(thumbUrl);
                 } else if (video.platform === 'tiktok') {
                     renderCard(''); // Placeholder initially
-                    fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(video.link)}`)
+                    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(video.link)}`;
+                    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(oembedUrl)}`)
                         .then(res => res.json())
                         .then(data => {
-                            if (data.thumbnail_url) renderCard(data.thumbnail_url);
+                            if (data.contents) {
+                                const parsed = JSON.parse(data.contents);
+                                if (parsed.thumbnail_url) renderCard(parsed.thumbnail_url);
+                            }
                         })
                         .catch(e => console.error("Could not fetch TikTok thumbnail", e));
                 } else {
