@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const configDiscord = document.getElementById('config-discord');
     const staffListContainer = document.getElementById('staff-list');
     const addStaffBtn = document.getElementById('add-staff-btn');
+    const socialMediaListContainer = document.getElementById('social-media-list');
+    const addSocialBtn = document.getElementById('add-social-btn');
     const updatesListContainer = document.getElementById('updates-list');
     const addUpdateBtn = document.getElementById('add-update-btn');
     const saveStatus = document.getElementById('save-status');
@@ -126,6 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
             buttonClass: row.querySelector('.update-btn-class').value
         }));
 
+        const socialInputs = document.querySelectorAll('.social-input-row');
+        const socialMedia = Array.from(socialInputs).map(row => ({
+            title: row.querySelector('.social-title').value,
+            platform: row.querySelector('.social-platform').value,
+            link: row.querySelector('.social-link').value,
+            thumbnail: row.querySelector('.social-thumbnail').value
+        }));
+
         let expiresAt = null;
         if (configUpdatesBadge.checked) {
             if (currentBadgeExpiration && Date.now() < currentBadgeExpiration) {
@@ -145,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
             hasNewUpdates: configUpdatesBadge.checked,
             updatesBadgeExpiresAt: expiresAt,
             staff: staff,
-            updates: updates
+            updates: updates,
+            socialMedia: socialMedia
         };
 
         try {
@@ -323,6 +334,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addStaffBtn.addEventListener('click', () => {
         createStaffInput();
+        scheduleAutoSave();
+    });
+
+    let draggedSocial = null;
+
+    // Social Media creation
+    function createSocialInput(title = '', platform = 'tiktok', link = '', thumbnail = '') {
+        const div = document.createElement('div');
+        div.className = 'social-input-row';
+        div.draggable = false;
+        div.style.border = '1px solid var(--card-border)';
+        div.style.padding = '15px';
+        div.style.marginBottom = '15px';
+        div.style.borderRadius = '8px';
+        div.style.backgroundColor = 'var(--card-bg)';
+        div.style.transition = 'opacity 0.2s';
+        
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div class="drag-handle" style="color: var(--text-muted); padding: 5px; cursor: grab;">
+                    <i class="fa-solid fa-grip-vertical"></i> Sleep om te verplaatsen
+                </div>
+                <button type="button" class="btn btn-secondary remove-social-btn" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash"></i> Verwijder Video</button>
+            </div>
+            <div class="form-group"><input type="text" class="social-title" placeholder="Title" value="${title}"></div>
+            <div class="form-group">
+                <select class="social-platform">
+                    <option value="tiktok" ${platform === 'tiktok' ? 'selected' : ''}>TikTok</option>
+                    <option value="youtube" ${platform === 'youtube' ? 'selected' : ''}>YouTube</option>
+                </select>
+            </div>
+            <div class="form-group"><input type="text" class="social-link" placeholder="Video Link (e.g. https://tiktok.com/...)" value="${link}"></div>
+            <div class="form-group"><input type="text" class="social-thumbnail" placeholder="Thumbnail URL" value="${thumbnail}"></div>
+        `;
+
+        div.querySelector('.social-title').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.social-platform').addEventListener('change', scheduleAutoSave);
+        div.querySelector('.social-link').addEventListener('input', scheduleAutoSave);
+        div.querySelector('.social-thumbnail').addEventListener('input', scheduleAutoSave);
+
+        div.querySelector('.remove-social-btn').addEventListener('click', () => {
+            div.remove();
+            scheduleAutoSave();
+        });
+
+        const dragHandle = div.querySelector('.drag-handle');
+        if (dragHandle) {
+            dragHandle.addEventListener('mouseenter', () => div.draggable = true);
+            dragHandle.addEventListener('mouseleave', () => div.draggable = false);
+        }
+
+        // Drag and Drop Logic
+        div.addEventListener('dragstart', function(e) {
+            draggedSocial = this;
+            setTimeout(() => this.style.opacity = '0.5', 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        div.addEventListener('dragend', function() {
+            draggedSocial = null;
+            this.style.opacity = '1';
+        });
+
+        div.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.border = '1px dashed var(--accent-gold)';
+        });
+
+        div.addEventListener('dragleave', function() {
+            this.style.border = '1px solid var(--card-border)';
+        });
+
+        div.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.border = '1px solid var(--card-border)';
+            if (draggedSocial !== this && draggedSocial !== null) {
+                const allSocials = [...socialMediaListContainer.querySelectorAll('.social-input-row')];
+                const draggedIndex = allSocials.indexOf(draggedSocial);
+                const targetIndex = allSocials.indexOf(this);
+                if (draggedIndex < targetIndex) {
+                    this.after(draggedSocial);
+                } else {
+                    this.before(draggedSocial);
+                }
+                scheduleAutoSave();
+            }
+        });
+
+        socialMediaListContainer.appendChild(div);
+    }
+
+    addSocialBtn.addEventListener('click', () => {
+        createSocialInput();
         scheduleAutoSave();
     });
 
@@ -538,6 +642,12 @@ document.addEventListener('DOMContentLoaded', () => {
             updatesList.forEach(upd => {
                 const hasBtn = upd.hasButton !== undefined ? upd.hasButton : (upd.buttonText ? true : false);
                 createUpdateInput(upd.date, upd.title, upd.description, hasBtn, upd.buttonText, upd.buttonLink, upd.buttonClass);
+            });
+
+            socialMediaListContainer.innerHTML = '';
+            const socialList = (data.socialMedia && Array.isArray(data.socialMedia)) ? data.socialMedia : (defaultConfig.socialMedia || []);
+            socialList.forEach(soc => {
+                createSocialInput(soc.title, soc.platform, soc.link, soc.thumbnail);
             });
 
         } catch (error) {
