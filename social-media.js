@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateLink = document.querySelector('nav a[href="updates.html"]');
             if (updateLink) {
                 if (showBadge) {
-                    updateLink.classList.add('has-update');
+                    updateLink.classList.add('has-updates');
                 } else {
-                    updateLink.classList.remove('has-update');
+                    updateLink.classList.remove('has-updates');
                 }
             }
 
