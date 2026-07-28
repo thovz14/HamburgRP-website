@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </select>
             </div>
             <div class="form-group"><input type="text" class="social-link" placeholder="Video Link (e.g. https://tiktok.com/...)" value="${link}"></div>
-            <div class="form-group"><input type="text" class="social-thumbnail" placeholder="Thumbnail URL" value="${thumbnail}"></div>
+            <div class="form-group"><input type="text" class="social-thumbnail" placeholder="Thumbnail URL (Optioneel, gaat automatisch)" value="${thumbnail}"></div>
         `;
 
         div.querySelector('.social-title').addEventListener('input', scheduleAutoSave);

@@ -4,13 +4,11 @@ import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/fireb
 document.addEventListener('DOMContentLoaded', () => {
 
     let videos = [];
-    let activeFilter = 'all';
 
     const grid = document.getElementById('video-grid');
     const emptyState = document.getElementById('empty-state');
     const detailModal = document.getElementById('detail-modal');
     const detailModalClose = document.getElementById('detail-modal-close');
-    const filterTabs = document.querySelectorAll('.filter-tab');
 
     // Setup Firestore listener
     const configRef = doc(db, 'config', 'website');
@@ -31,54 +29,70 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function renderGrid() {
-        const filtered = activeFilter === 'all'
-            ? videos
-            : videos.filter(v => v.platform === activeFilter);
-
         grid.innerHTML = '';
 
-        if (filtered.length === 0) {
+        if (videos.length === 0) {
             emptyState.style.display = 'block';
             return;
         }
 
         emptyState.style.display = 'none';
 
-        filtered.forEach((video, index) => {
+        videos.forEach((video, index) => {
             const card = document.createElement('div');
             card.className = 'video-card';
             card.style.animationDelay = `${index * 0.08}s`;
             card.dataset.id = video._id;
 
-            const thumbHTML = video.thumbnail
-                ? `<img class="video-card-thumb" src="${escapeHTML(video.thumbnail)}" alt="${escapeHTML(video.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                   <div class="video-card-no-img" style="display:none;">${video.platform === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : '<i class="fa-brands fa-tiktok"></i>'}</div>`
-                : `<div class="video-card-no-img">${video.platform === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : '<i class="fa-brands fa-tiktok"></i>'}</div>`;
-
-            card.innerHTML = `
-                ${thumbHTML}
-                <div class="video-card-overlay">
-                    <div class="video-card-title">${escapeHTML(video.title)}</div>
-                    <div class="video-card-platform ${video.platform}">
-                        ${video.platform === 'tiktok' ? '<i class="fa-brands fa-tiktok" style="margin-right:4px;"></i> TikTok' : '<i class="fa-brands fa-youtube" style="margin-right:4px;"></i> YouTube'}
-                    </div>
-                </div>
-            `;
-
-            card.addEventListener('click', () => openDetail(video._id));
+            // Append first to keep order
             grid.appendChild(card);
+
+            const renderCard = (thumb) => {
+                const thumbHTML = thumb
+                    ? `<img class="video-card-thumb" src="${escapeHTML(thumb)}" alt="${escapeHTML(video.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="video-card-no-img" style="display:none;">${video.platform === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : '<i class="fa-brands fa-tiktok"></i>'}</div>`
+                    : `<div class="video-card-no-img">${video.platform === 'youtube' ? '<i class="fa-brands fa-youtube"></i>' : '<i class="fa-brands fa-tiktok"></i>'}</div>`;
+
+                card.innerHTML = `
+                    ${thumbHTML}
+                    <div class="video-card-overlay">
+                        <div class="video-card-title">${escapeHTML(video.title)}</div>
+                        <div class="video-card-platform ${video.platform}">
+                            ${video.platform === 'tiktok' ? '<i class="fa-brands fa-tiktok" style="margin-right:4px;"></i> TikTok' : '<i class="fa-brands fa-youtube" style="margin-right:4px;"></i> YouTube'}
+                        </div>
+                    </div>
+                `;
+                
+                // Remove old event listeners if updating
+                const newCard = card.cloneNode(true);
+                card.parentNode.replaceChild(newCard, card);
+                newCard.addEventListener('click', () => openDetail(video._id, thumb));
+            };
+
+            let thumbUrl = video.thumbnail;
+            if (thumbUrl) {
+                renderCard(thumbUrl);
+            } else {
+                if (video.platform === 'youtube') {
+                    const match = video.link.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+                    if (match && match[2].length === 11) {
+                        thumbUrl = `https://img.youtube.com/vi/${match[2]}/maxresdefault.jpg`;
+                    }
+                    renderCard(thumbUrl);
+                } else if (video.platform === 'tiktok') {
+                    renderCard(''); // Placeholder initially
+                    fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(video.link)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.thumbnail_url) renderCard(data.thumbnail_url);
+                        })
+                        .catch(e => console.error("Could not fetch TikTok thumbnail", e));
+                } else {
+                    renderCard('');
+                }
+            }
         });
     }
-
-    // Filter Tabs
-    filterTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            filterTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            activeFilter = tab.dataset.filter;
-            renderGrid();
-        });
-    });
 
     // Modal Logic
     function openModal(modal) {
@@ -101,16 +115,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') closeModal(detailModal);
     });
 
-    function openDetail(id) {
+    function openDetail(id, resolvedThumb) {
         const video = videos.find(v => v._id === id);
         if (!video) return;
 
+        const thumbToUse = resolvedThumb || video.thumbnail;
+
         document.getElementById('detail-title').textContent = video.title;
-        document.getElementById('detail-img').src = video.thumbnail || '';
+        document.getElementById('detail-img').src = thumbToUse || '';
         document.getElementById('detail-img').alt = video.title;
 
         const thumbContainer = document.getElementById('detail-thumbnail');
-        thumbContainer.style.display = video.thumbnail ? 'flex' : 'none';
+        thumbContainer.style.display = thumbToUse ? 'flex' : 'none';
 
         const badge = document.getElementById('detail-platform');
         badge.innerHTML = video.platform === 'tiktok' ? '<i class="fa-brands fa-tiktok" style="margin-right:4px;"></i> TikTok' : '<i class="fa-brands fa-youtube" style="margin-right:4px;"></i> YouTube';
