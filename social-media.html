@@ -27,9 +27,12 @@
 
     <main class="container" style="max-width: 1200px;">
         <section id="social-hero" style="text-align: center; margin-bottom: 2rem;">
-            <div class="updates-header" style="margin-bottom: 2rem;">
+            <div class="updates-header" style="margin-bottom: 1.5rem;">
                 <span class="pill">SOCIAL MEDIA</span>
             </div>
+            <button id="discord-widget-btn" class="btn" style="margin-bottom: 2rem; background: rgba(0,0,0,0.4); border: 1px solid var(--card-border); color: #fff; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-weight: 600; font-size: 1rem;">
+                <i class="fa-brands fa-discord"></i> Discord
+            </button>
             <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto 2rem;">Check out our TikToks, YouTube videos and more. Click on a video for details.</p>
 
         </section>
@@ -69,6 +72,19 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ===== DISCORD MODAL ===== -->
+    <div class="modal-overlay" id="discord-modal">
+        <div class="modal-card" style="max-width: 380px; padding: 0; background: transparent; border: none; box-shadow: none; display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; justify-content: flex-end; width: 350px; margin-bottom: 10px;">
+                <button class="modal-close" id="discord-modal-close" style="position: static; font-size: 2rem; color: #fff; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">&times;</button>
+            </div>
+            <iframe src="https://discord.com/widget?id=1397161064604504117&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+            <a href="#" id="discord-direct-join" target="_blank" class="btn" style="display: block; box-sizing: border-box; width: 350px; text-align: center; margin: 10px 0 0 0; background: #5865F2; color: #fff; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: bold;">
+                <i class="fa-solid fa-link" style="margin-right: 5px;"></i> click here to join our discord! 🚀
+            </a>
         </div>
     </div>
 

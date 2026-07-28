@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyState = document.getElementById('empty-state');
     const detailModal = document.getElementById('detail-modal');
     const detailModalClose = document.getElementById('detail-modal-close');
+    
+    const discordModal = document.getElementById('discord-modal');
+    const discordBtn = document.getElementById('discord-widget-btn');
+    const discordClose = document.getElementById('discord-modal-close');
 
     // Setup Firestore listener
     const configRef = doc(db, 'config', 'website');
@@ -35,6 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     updateLink.classList.remove('has-updates');
                 }
+            }
+
+            const discordJoinLink = document.getElementById('discord-direct-join');
+            if (discordJoinLink && data.discordLink) {
+                discordJoinLink.href = data.discordLink;
             }
 
             renderGrid();
@@ -132,8 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === detailModal) closeModal(detailModal);
     });
 
+    if (discordBtn) {
+        discordBtn.addEventListener('click', () => openModal(discordModal));
+    }
+    
+    if (discordClose) {
+        discordClose.addEventListener('click', () => closeModal(discordModal));
+    }
+    
+    discordModal.addEventListener('click', (e) => {
+        if (e.target === discordModal) closeModal(discordModal);
+    });
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal(detailModal);
+        if (e.key === 'Escape') {
+            closeModal(detailModal);
+            closeModal(discordModal);
+        }
     });
 
     function openDetail(id, resolvedThumb) {
